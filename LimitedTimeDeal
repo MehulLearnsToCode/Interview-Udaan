@@ -1,0 +1,136 @@
+import java.sql.*;
+
+class LimitedTimeDeal
+{
+    static final String DB_URL = "jdbc:mysql://localhost/";
+    static final String USER = "guest";
+    static final String PASS = "guest123";
+
+
+    int mDealEndTime = 2;
+    int mNoOfItems;
+    int mPrice;
+    int mItemId;
+    bool isDealActive;
+    private User user;
+
+    LimitedTimeDeal(int price, int noOfItems, int ItemId)
+    {
+        mPrice = price;
+        mNoOfItems = noOfItems;
+        mItemId = ItemId;
+        AddItemIdToDatabase();
+        if(mDealEndTime > 0 && mNoOfItems)
+        {
+            isDealActive = true;
+        }
+        else
+        {
+            isDealActive = false;
+        }
+    }
+
+    public void updateItemsOrEndTime(int noOfItems, int dealEndTime)
+    {
+        if(isDealActive)
+        {
+            mNoOfItems = noOfItems;
+            mDealEndTime = dealEndTime;
+            AddThisInfoToLTDTable();
+        }
+
+    }
+
+    public void endDeal()
+    {
+        mDealEndTime = 0;
+        mNoOfItems = 0;
+        mPrice = 0;
+        isDealActive = false;
+    }
+
+    public void AddUserToDatabase(int userId, int ItemId)
+    {
+        try(Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+         Statement stmt = conn.createStatement();
+      ) {
+          s.executeUpdate("INSERT INTO USERS (id,ItemId) VALUE ('"+userId+"','"+ItemId+"')");
+      }catch (SQLException e) {
+         e.printStackTrace();
+    }
+
+
+    public void AlreadyClaimedByUser(int userId)
+    {
+         try(Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+         Statement stmt = conn.createStatement();
+         static final String QUERY = "SELECT id, ItemId FROM USERS";
+         ResultSet rs = stmt.executeQuery(QUERY);
+      ) {	
+          
+          while(rs.next())
+          {
+              int id = rs.getInt("id");
+              if(userId == id)
+              {
+                    int ItemId = rs.getInt(ItemId);
+                    if(ItemId)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+              } 
+          }
+         
+      } catch (SQLException e) {
+         e.printStackTrace();
+      } 
+   }
+    }
+
+
+    public String claimDeal(int UserId, int ItemId)
+    {
+        if(!AlreadyClaimedByUser(UserId))
+        {
+            AddUserToDatabase(UserId, ItemId);
+            if(isDealActive && mNoOfItems)
+            {
+                mNoOfItems--;
+                return "The deal was claimed, No of items remaining " +mNoOfItems;
+            }
+        }
+        else
+        {
+            return "This deal was already cclaimed by this user";
+        }    
+    }
+
+}
+
+public static void main(String[] args)
+{
+    try(Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+         Statement stmt = conn.createStatement();
+      ) {		      
+         String userSql = "CREATE DATABASE DEALS";
+         stmt.executeUpdate(userSql);
+         String AddUsersTable = "CREATE TABLE USERS" +
+                                "(id INTEGER not NULL)" +
+                                "(ItemId INTEGER)";
+         String InventoryTable = "CREATE TABLE INVENTORY" +
+                                "(ItemId INTEGER not NULL)";
+
+         String DealTable = "CREATE TABLE LTD" +
+                            "(dealTime INTEGER)" +
+                            "(isDealActive BOOL)";
+         stmt.executeUpdate(InventorySql);
+         System.out.println("Databases created successfully...");   	  
+      } catch (SQLException e) {
+         e.printStackTrace();
+      } 
+   }
+}
